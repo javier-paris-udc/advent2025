@@ -42,6 +42,10 @@ intP =
         return (num * sign)
 
 
+digit :: Parser Int
+digit = read . (:[]) <$> digitChar
+
+
 blankP :: Parser ()
 blankP = void $ oneOf " \t"
 
