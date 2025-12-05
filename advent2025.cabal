@@ -74,3 +74,9 @@ executable day03
     import:           shared-properties
     main-is:          day03.hs
     hs-source-dirs:   app
+
+executable day04
+    import:           shared-properties
+    main-is:          day04.hs
+    build-depends:    unordered-containers ^>= 0.2
+    hs-source-dirs:   app
