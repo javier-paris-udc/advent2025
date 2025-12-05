@@ -33,7 +33,7 @@ binSearch intervals n = search 0 (length intervals - 1)
 
 
 solveP2 :: (Vector (Int, Int), [Int]) -> Int
-solveP2 (intervals, _) = sum $ map intervalLength $ fuseIntervals $ toList intervals
+solveP2 (intervals, _) = sum $ map intervalLength $ toList intervals
 
 
 solveP1 :: (Vector (Int, Int), [Int]) -> Int
@@ -43,7 +43,8 @@ solveP1 (intervals, nums) = length $ filter (binSearch intervals) nums
 ingredientsP :: Parser (Vector (Int, Int), [Int])
 ingredientsP = liftA2 (,) (fmap fromList intervalsP <* space) (decimal `sepEndBy1` newline)
   where
-    intervalsP = fmap sort (liftA2 (,) (decimal <* symbol "-") decimal `sepEndBy1` newline)
+    intervalsP = fmap (fuseIntervals . sort) (intervalP `sepEndBy1` newline)
+    intervalP  = liftA2 (,) (decimal <* symbol "-") decimal
 
 
 main :: IO ()
