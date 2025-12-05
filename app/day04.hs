@@ -14,7 +14,6 @@ isAccessible grid (x, y) =
     in rolls < 4
 
 
-
 solveP2 :: HashSet (Int, Int) -> Int
 solveP2 grid0 = S.size grid0 - S.size (removeAll grid0)
   where

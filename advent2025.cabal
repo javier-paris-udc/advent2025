@@ -80,3 +80,9 @@ executable day04
     main-is:          day04.hs
     build-depends:    unordered-containers ^>= 0.2
     hs-source-dirs:   app
+
+executable day05
+    import:           shared-properties
+    main-is:          day05.hs
+    build-depends:    vector ^>= 0.13
+    hs-source-dirs:   app
