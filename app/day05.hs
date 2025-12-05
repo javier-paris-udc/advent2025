@@ -2,7 +2,7 @@ module Main where
 
 import AoC                  (Parser, applyInput, decimal, symbol)
 import Data.List            (sort)
-import Data.Vector          (Vector, (!), fromList, toList)
+import Data.Vector          (Vector, (!), fromList)
 import Text.Megaparsec      (sepEndBy1)
 import Text.Megaparsec.Char (newline, space)
 
@@ -32,16 +32,16 @@ binSearch intervals n = search 0 (length intervals - 1)
                 if n < iStart then search st (mid - 1) else search (mid + 1) end
 
 
-solveP2 :: (Vector (Int, Int), [Int]) -> Int
-solveP2 (intervals, _) = sum $ map intervalLength $ toList intervals
+solveP2 :: ([(Int, Int)], [Int]) -> Int
+solveP2 (intervals, _) = sum $ map intervalLength intervals
 
 
-solveP1 :: (Vector (Int, Int), [Int]) -> Int
-solveP1 (intervals, nums) = length $ filter (binSearch intervals) nums
+solveP1 :: ([(Int, Int)], [Int]) -> Int
+solveP1 (intervals, nums) = length $ filter (binSearch (fromList intervals)) nums
 
 
-ingredientsP :: Parser (Vector (Int, Int), [Int])
-ingredientsP = liftA2 (,) (fmap fromList intervalsP <* space) (decimal `sepEndBy1` newline)
+ingredientsP :: Parser ([(Int, Int)], [Int])
+ingredientsP = liftA2 (,) (intervalsP <* space) (decimal `sepEndBy1` newline)
   where
     intervalsP = fmap (fuseIntervals . sort) (intervalP `sepEndBy1` newline)
     intervalP  = liftA2 (,) (decimal <* symbol "-") decimal
