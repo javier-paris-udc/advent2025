@@ -2,18 +2,12 @@ module Main where
 
 import AoC                  (Parser, applyInput1, blankP, blanksP, decimal, lexeme)
 import Data.List            (transpose)
-import Text.Megaparsec      ((<|>), many, sepEndBy1, some, try)
-import Text.Megaparsec.Char (char, digitChar, newline, space)
-import Data.Either          (lefts, rights)
 import Data.Maybe           (catMaybes, isNothing)
+import Text.Megaparsec      ((<|>), many, sepEndBy1, some, try)
+import Text.Megaparsec.Char (char, digitChar, newline)
 
 
-data Op = Sum | Product deriving (Show, Eq)
-
-
-opToFun :: Op -> [Int] -> Int
-opToFun Sum     = sum
-opToFun Product = product
+type Op = [Int] -> Int
 
 
 splitOn :: (a -> Bool) -> [a] -> [[a]]
@@ -23,40 +17,36 @@ splitOn p l = case break p l of
     (s, rest) -> s : splitOn p (drop 1 rest)
 
 
-solve :: [([Int], Op)] -> Int
-solve = sum . map (\(nums, op) -> opToFun op nums)
+solve :: [(Op, [Int])] -> Int
+solve = sum . map (uncurry ($))
 
 
 opP :: Parser Op
-opP = (char '+' >> pure Sum) <|> (char '*' >> pure Product)
+opP = (char '+' >> pure sum) <|> (char '*' >> pure product)
 
 
-cephalopodOrderP :: Parser [([Int], Op)]
+cephalopodOrderP :: Parser [(Op, [Int])]
 cephalopodOrderP = do
-    numLines <- try lineP `sepEndBy1` newline
-    ops <- many blanksP >> some (lexeme opP)
-    let nums = toNumLists $ transpose numLines
-    return $ zip nums ops
+    nums <- try lineP `sepEndBy1` newline
+    ops  <- many blanksP >> some (lexeme opP)
+    return $ zip ops (toNumLists (transpose nums))
   where
-    lineP = some $ (Just . read . (:[]) <$> digitChar) <|> (char ' ' >> pure Nothing)
+    lineP = some $ (Just <$> digitChar) <|> (char ' ' >> pure Nothing)
 
-    toNumLists :: [[Maybe Int]] -> [[Int]]
     toNumLists =  map catMaybes . splitOn isNothing . map toNum
 
-    toNum :: [Maybe Int] -> Maybe Int
     toNum maybeNum = case catMaybes maybeNum of
         []   -> Nothing
-        num  -> Just $ foldl' (\acc x -> acc * 10 + x) 0 num
+        num  -> Just $ read num
 
 
-normalOrderP :: Parser [([Int], Op)]
+normalOrderP :: Parser [(Op, [Int])]
 normalOrderP = do
-    lns <- lineP `sepEndBy1` space
-    let nums = lefts lns
-        ops  = concat $ rights lns
-    return (zip (transpose nums) ops)
+    nums <- try numLineP `sepEndBy1` newline
+    ops  <- many blanksP >> some (lexeme opP)
+    return (zip ops (transpose nums))
   where
-    lineP = many blankP >> (Left <$> some (lexeme decimal)) <|> (Right <$> some (lexeme opP))
+    numLineP = many blankP >> some (lexeme decimal)
 
 
 main :: IO ()
