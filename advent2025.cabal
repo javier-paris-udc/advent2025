@@ -86,3 +86,8 @@ executable day05
     main-is:          day05.hs
     build-depends:    vector ^>= 0.13
     hs-source-dirs:   app
+
+executable day06
+    import:           shared-properties
+    main-is:          day06.hs
+    hs-source-dirs:   app
