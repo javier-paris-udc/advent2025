@@ -91,3 +91,9 @@ executable day06
     import:           shared-properties
     main-is:          day06.hs
     hs-source-dirs:   app
+
+executable day07
+    import:           shared-properties
+    main-is:          day07.hs
+    build-depends:    containers ^>=0.7
+    hs-source-dirs:   app
