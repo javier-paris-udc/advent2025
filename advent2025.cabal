@@ -104,3 +104,8 @@ executable day08
     build-depends:    pqueue ^>= 1.6,
                       disjoint-containers ^>= 0.3
     hs-source-dirs:   app
+
+executable day09
+    import:           shared-properties
+    main-is:          day09.hs
+    hs-source-dirs:   app
