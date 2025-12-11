@@ -109,3 +109,17 @@ executable day09
     import:           shared-properties
     main-is:          day09.hs
     hs-source-dirs:   app
+
+executable day10
+    import:           shared-properties
+    main-is:          day10.hs
+    other-modules:    Dijkstra
+    build-depends:    containers >= 0.6
+    hs-source-dirs:   app
+
+executable day11
+    import:           shared-properties
+    main-is:          day11.hs
+    build-depends:    unordered-containers ^>= 0.2,
+                      MemoTrie >= 0.6
+    hs-source-dirs:   app
