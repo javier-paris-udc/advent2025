@@ -113,7 +113,6 @@ executable day09
 executable day10
     import:           shared-properties
     main-is:          day10.hs
-    other-modules:    Dijkstra
     build-depends:    containers >= 0.6
     hs-source-dirs:   app
 
