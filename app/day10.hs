@@ -1,64 +1,78 @@
 module Main where
 
-import Text.Megaparsec (sepEndBy1, between, sepBy1, (<|>), some)
-import Control.Applicative (liftA3)
-import AoC (applyInput, blanksP, lexeme, decimal)
-import Text.Megaparsec.Char (char, space)
-import Dijkstra (dijkstra)
-import Data.Function ((&))
+import           AoC                  (applyInput, blanksP, decimal, lexeme)
+import           Control.Applicative  (liftA3)
+import           Data.Function        ((&))
+import           Data.List            (find, sortOn, subsequences, sortOn)
+import qualified Data.Map.Strict      as M
+import           Data.Maybe           (catMaybes, fromMaybe)
+import           Text.Megaparsec      ((<|>), between, sepBy1, sepEndBy1, some)
+import           Text.Megaparsec.Char (char, space)
 
 
-applyButtonsP2 :: [Int] -> [[Int]] -> [Int] -> [([Int], Int)]
-applyButtonsP2 joltageGoal buttons joltage =
-    buttons
-    & map (applyButton 0 joltage)
-    & filter (and . zipWith (>=) joltageGoal)
-    & map (,1)
+parity :: [Int] -> [Bool]
+parity = map odd
+
+
+applyButtons :: (a -> a) -> [a] -> [[Int]] -> [a]
+applyButtons f = foldl' (applyButton 0)
   where
-    applyButton _ [] (_:_) = error "no joltage"
+    applyButton _ [] (_:_) = error "no index"
     applyButton _ jtg []   = jtg
     applyButton i (j:js) (b:bs)
         | i < b  = j : applyButton (i+1) js (b:bs)
-        | i == b = (j + 1) : applyButton (i+1) js bs
-        | otherwise = error "index"
-
-
-solveMachineP2 :: ([Bool], [[Int]], [Int]) -> Int
-solveMachineP2 (_, buttons, joltage) =
-    case dijkstra (replicate (length joltage) 0) (== joltage) (applyButtonsP2 joltage buttons) of
-        Nothing -> error "no solution"
-        Just path -> length path - 1
-
-
-applyButtonsP1 :: [[Int]] -> [Bool] -> [([Bool], Int)]
-applyButtonsP1 buttons lights = map ((,1) . applyButton 0 lights) buttons
-  where
-    applyButton _ ls []    = ls
-    applyButton _ [] (_:_) = error "no lights"
-    applyButton i (l:ls) (b:bs)
-        | i <  b = l : applyButton (i+1) ls (b:bs)
-        | i == b = not l : applyButton (i+1) ls bs
+        | i == b = f j : applyButton (i+1) js bs
         | otherwise = error "index"
 
 
 solveMachineP1 :: ([Bool], [[Int]], [Int]) -> Int
 solveMachineP1 (lights, buttons, _) =
-    case dijkstra (replicate (length lights) False) (== lights) (applyButtonsP1 buttons) of
-        Nothing -> error "no solution"
-        Just path -> length path - 1
+    subsequences buttons
+    & sortOn length
+    & find ((==lights) . applyButtons not allOff)
+    & maybe (error "no solution") length
+  where
+    allOff = replicate (length lights) False
 
 
+minimize :: M.Map [Bool] [([Int], Int)] -> [Int] -> Maybe Int
+minimize m joltages
+    | any  (<0) joltages = Nothing
+    | all (==0) joltages = Just 0
+    | otherwise = do
+        opts <- m M.!? parity joltages
+        minMaybe $ map checkOpt opts
+  where
+    minMaybe l = case catMaybes l of
+        []   -> Nothing
+        opts -> Just $ minimum opts
 
-solveP2 :: [([Bool], [[Int]], [Int])] -> Int
-solveP2 = solveMachineP2 . head
+    checkOpt (changes, cost) =
+          zipWith (-) joltages changes
+        & map (`div` 2)
+        & minimize m
+        & fmap (\c -> cost + c * 2)
 
 
-solveP1 :: [([Bool], [[Int]], [Int])] -> Int
-solveP1 = sum . map solveMachineP1
+solveMachineP2 :: ([Bool], [[Int]], [Int]) -> Int
+solveMachineP2 (_, buttons, joltages) = fromMaybe (-1) $ minimize m joltages
+  where
+    all0 = replicate (length joltages) 0
+
+    m = subsequences buttons
+      & foldl' insertPattern M.empty
+
+    insertPattern mp btns =
+        let res    = applyButtons (+1) all0 btns
+        in M.insertWith (++) (parity res) [(res, length btns)] mp
+
+
+solve :: (([Bool], [[Int]], [Int]) -> Int) -> [([Bool], [[Int]], [Int])] -> Int
+solve solver = sum . map solver
 
 
 main :: IO ()
-main = applyInput (machineP `sepEndBy1` space) solveP1 solveP2
+main = applyInput (machineP `sepEndBy1` space) (solve solveMachineP1) (solve solveMachineP2)
   where
     machineP = liftA3 (,,) (lexeme lightsP) (buttonP `sepEndBy1` blanksP) joltageP
 
